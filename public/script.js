@@ -24,7 +24,7 @@ scanBtn.addEventListener("click",async()=>{
         });
         const data = await response.json();
         if(!data.success){
-            results.innerHTML = `<p>${data.message}</p>`;
+            result.innerHTML = `<p>${data.message}</p>`;
             return;
         }
         let headerHTML = "";
