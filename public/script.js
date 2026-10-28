@@ -1,3 +1,4 @@
+
 const scanForm = document.getElementById("scanForm");
 const urlInput = document.getElementById("url");
 const scanBtn = document.getElementById("scanBtn");
@@ -51,18 +52,28 @@ function updateGauge(score, rating) {
   gaugeProgress.style.strokeDashoffset = String(offset);
 
   scoreLabel.textContent =
-    safeScore >= 90 ? "Strong security header configuration."
-    : safeScore >= 75 ? "Good baseline. Review remaining findings."
-    : safeScore >= 50 ? "Several improvements are recommended."
-    : safeScore >= 25 ? "Important security gaps need attention."
-    : "Critical: review missing or weak security headers.";
+    safeScore >= 90
+      ? "Strong security header configuration."
+      : safeScore >= 75
+        ? "Good baseline. Review remaining findings."
+        : safeScore >= 50
+          ? "Several improvements are recommended."
+          : safeScore >= 25
+            ? "Important security gaps need attention."
+            : "Critical: review missing or weak security headers.";
 }
 
 function normalizeStatus(status) {
   const value = String(status || "").toLowerCase();
 
-  if (value === "present" || value === "pass") return "present";
-  if (value === "weak" || value === "warning") return "weak";
+  if (value === "present" || value === "pass") {
+    return "present";
+  }
+
+  if (value === "weak" || value === "warning") {
+    return "weak";
+  }
+
   return "missing";
 }
 
@@ -72,6 +83,7 @@ function normalizeRisk(risk) {
   if (value === "low") return "low";
   if (value === "medium" || value === "moderate") return "medium";
   if (value === "critical") return "critical";
+
   return "high";
 }
 
@@ -79,6 +91,7 @@ function makeBadge(text, className) {
   const badge = document.createElement("span");
   badge.className = className;
   badge.textContent = text;
+
   return badge;
 }
 
@@ -88,12 +101,14 @@ function addCell(row, content) {
   if (content instanceof Node) {
     cell.appendChild(content);
   } else {
-    cell.textContent = content == null || content === ""
-      ? "Not provided"
-      : String(content);
+    cell.textContent =
+      content == null || content === ""
+        ? "Not provided"
+        : String(content);
   }
 
   row.appendChild(cell);
+
   return cell;
 }
 
@@ -103,95 +118,53 @@ function renderHeaderTable(headers) {
   headers.forEach((item) => {
     const row = document.createElement("tr");
 
+    // Header name and description
     const nameCell = document.createElement("td");
     const name = document.createElement("div");
+
     name.className = "header-name";
     name.textContent = item.header || "Unknown header";
+
     nameCell.appendChild(name);
 
     if (item.description) {
       const description = document.createElement("div");
+
       description.className = "header-description";
       description.textContent = item.description;
+
       nameCell.appendChild(description);
     }
 
     row.appendChild(nameCell);
 
-
+    // Header status
     const status = normalizeStatus(item.status);
-    const statusText = status === "present"
-      ? "Present"
-      : status === "weak" ? "Weak" : "Missing";
-    try{
-        const response = await fetch("/api/scan",{
-            method: "POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body: JSON.stringify({
-                url:url
-            })
-        });
-        const data = await response.json();
-        if(!data.success){
-            result.innerHTML = `<p>${data.message}</p>`;
-            return;
-        }
-        let headerHTML = "";
-          
-        data.headers.forEach(header=>{
-            headerHTML += `
-            <div class="header-result">
-               <h3>${header.header}</h3>
-               <p>
-                    Status:
-                    <strong>${header.status}</strong>
-                </p>
-                <p>${
-                    header.value
-                    ? `Value:${header.value}`
-                    : "This security header is missing."
-                 }
-                 </p>
-                 <p>
-                     ${header.description}
-                 </p>
-            </div>
-        `;
-        });
-        result.innerHTML = `
-            <div class="score">
-                <h2>Security Score</h2>
-                <div class="score-number">
-                    ${data.score}/100
-                </div>
-                <h3>${data.rating}</h3>
-            </div> 
-            <div class="scan-info">
-                <p>
-                    <strong>Target:</strong>
-                     ${data.url}
-                </p>
-                <p>
-                    <strong>HTTP Status:</strong>
-                    ${data.statusCode}
-                </p>
-            </div>
-            <div class= "headers">
-                <h2>Security Headers</h2>
-                ${headerHTML}     
-            </div>
-        `;
 
+    const statusText =
+      status === "present"
+        ? "Present"
+        : status === "weak"
+          ? "Weak"
+          : "Missing";
 
-    addCell(row, makeBadge(statusText, `status-badge status-${status}`));
+    addCell(
+      row,
+      makeBadge(statusText, `status-badge status-${status}`)
+    );
 
+    // Risk level
     const risk = normalizeRisk(item.risk);
     const riskText = risk.charAt(0).toUpperCase() + risk.slice(1);
-    addCell(row, makeBadge(riskText, `risk-badge risk-${risk}`));
 
+    addCell(
+      row,
+      makeBadge(riskText, `risk-badge risk-${risk}`)
+    );
+
+    // Observed header value
     addCell(row, item.value || "Not detected");
+
     headerTableBody.appendChild(row);
   });
 
@@ -207,9 +180,11 @@ function createDetailBlock(title, text) {
   heading.textContent = title;
 
   const paragraph = document.createElement("p");
-  paragraph.textContent = text || "No additional information available.";
+  paragraph.textContent =
+    text || "No additional information available.";
 
   block.append(heading, paragraph);
+
   return block;
 }
 
@@ -222,9 +197,12 @@ function renderDetails(headers) {
 
   if (findings.length === 0) {
     detailsEmpty.textContent =
-      "No missing or weak headers were detected by these checks. This does not guarantee that the website is fully secure.";
+      "No missing or weak headers were detected by these checks. " +
+      "This does not guarantee that the website is fully secure.";
+
     detailsEmpty.classList.remove("hidden");
     detailsList.classList.add("hidden");
+
     return;
   }
 
@@ -235,24 +213,31 @@ function renderDetails(headers) {
     const card = document.createElement("article");
     card.className = "finding-card";
 
+    // Finding heading
     const head = document.createElement("div");
     head.className = "finding-card-head";
 
     const headingWrap = document.createElement("div");
+
     const heading = document.createElement("h3");
     heading.textContent = item.header || "Unknown header";
 
     const subtitle = document.createElement("p");
-    subtitle.textContent = status === "missing"
-      ? "This response did not include the expected header."
-      : "This header was detected, but its value may need improvement.";
+    subtitle.textContent =
+      status === "missing"
+        ? "This response did not include the expected header."
+        : "This header was detected, but its value may need improvement.";
 
     headingWrap.append(heading, subtitle);
 
+    // Status and risk badges
     const badges = document.createElement("div");
+
     badges.append(
-      makeBadge(status === "missing" ? "Missing" : "Weak",
-        `status-badge status-${status}`),
+      makeBadge(
+        status === "missing" ? "Missing" : "Weak",
+        `status-badge status-${status}`
+      ),
       document.createTextNode(" "),
       makeBadge(
         `${risk.charAt(0).toUpperCase()}${risk.slice(1)} risk`,
@@ -262,14 +247,22 @@ function renderDetails(headers) {
 
     head.append(headingWrap, badges);
 
+    // Finding details
     const body = document.createElement("div");
     body.className = "finding-card-body";
 
     body.append(
-      createDetailBlock("Why it matters", item.impact || item.description),
-      createDetailBlock("Recommended action", item.recommendation)
+      createDetailBlock(
+        "Why it matters",
+        item.impact || item.description
+      ),
+      createDetailBlock(
+        "Recommended action",
+        item.recommendation
+      )
     );
 
+    // Example configuration, if supplied by the backend
     if (item.fixExample) {
       const exampleBlock = document.createElement("div");
       exampleBlock.className = "detail-block";
@@ -285,10 +278,12 @@ function renderDetails(headers) {
       body.appendChild(exampleBlock);
     }
 
+    // Observed value
     const valueBlock = createDetailBlock(
       "Observed value",
       item.value || "Header not detected in the response."
     );
+
     body.appendChild(valueBlock);
 
     card.append(head, body);
@@ -303,29 +298,37 @@ function showScanResults(data) {
   const headers = Array.isArray(data.headers) ? data.headers : [];
   const score = Number(data.score) || 0;
   const rating = data.rating || "Unknown";
+
   const present = headers.filter(
     (item) => normalizeStatus(item.status) === "present"
   ).length;
+
   const findings = headers.filter(
     (item) => normalizeStatus(item.status) !== "present"
   ).length;
 
+  // Update the security score gauge
   updateGauge(score, rating);
 
+  // Update dashboard statistics
   checkedValue.textContent = data.checked ?? headers.length;
   presentValue.textContent = data.present ?? present;
   findingValue.textContent = data.findings ?? findings;
 
+  // Update scan status
   scanStatus.textContent = "SCAN COMPLETE";
   scanStatus.style.color = "#3ce5a1";
 
+  // Update target and HTTP information
   targetInfo.textContent = data.url || urlInput.value;
+
   httpInfo.textContent = data.statusCode
     ? `HTTP ${data.statusCode}`
     : "Response received";
 
   scanFooter.textContent = new Date().toLocaleString();
 
+  // Render the results
   renderHeaderTable(headers);
   renderDetails(headers);
 }
@@ -340,17 +343,25 @@ scanForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  // Show loading state
   scanBtn.disabled = true;
   scanBtnText.textContent = "Scanning website...";
   scanStatus.textContent = "SCANNING";
   scanStatus.style.color = "#36d9f5";
-  setMessage("Requesting the website and analyzing its response headers...");
+
+  setMessage(
+    "Requesting the website and analyzing its response headers..."
+  );
 
   try {
     const response = await fetch("/api/scan", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: targetURL })
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        url: targetURL
+      })
     });
 
     let data;
@@ -362,19 +373,28 @@ scanForm.addEventListener("submit", async (event) => {
     }
 
     if (!response.ok || data.success === false) {
-      throw new Error(data.message || data.error || `Scan failed (HTTP ${response.status}).`);
+      throw new Error(
+        data.message ||
+        data.error ||
+        `Scan failed (HTTP ${response.status}).`
+      );
     }
 
+    // Display scan results
     showScanResults(data);
+
     setMessage("Scan completed successfully.", "success");
   } catch (error) {
     setMessage(
-      error.message || "Unable to complete the scan. Check the server terminal.",
+      error.message ||
+      "Unable to complete the scan. Check the server terminal.",
       "error"
     );
+
     scanStatus.textContent = "SCAN FAILED";
     scanStatus.style.color = "#ff647c";
   } finally {
+    // Restore the scan button
     scanBtn.disabled = false;
     scanBtnText.textContent = "Run Security Scan →";
   }
