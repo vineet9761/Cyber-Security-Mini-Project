@@ -1,23 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTTP Security Header Analyzer</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080d18">
+  <title>SecureScan | HTTP Security Analyzer</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/script.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1>HTTP Security Header Analyzer</h1>
-        <p class="subtitle">Analyze the security headers of a website</p>
-        <div class="scanner-box">
-            <input type="text" id="url" placeholder="Enter website URL:">
-            <button id="scanBtn">
-                Scan Website
-            </button>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/">
+        <span class="brand-icon">S</span>
+        <span>Secure<span class="accent">Scan</span><small>WEB SECURITY ANALYZER</small></span>
+      </a>
+
+      <div class="nav-label">WORKSPACE</div>
+      <a class="nav-item active" href="#scanner"><span>⌕</span> Security Scanner</a>
+      <a class="nav-item" href="#overview"><span>◉</span> Security Overview</a>
+      <a class="nav-item" href="#findings"><span>▤</span> Findings & Fixes</a>
+
+      <div class="sidebar-bottom">
+        <div class="status-dot"></div>
+        <div><strong>Scanner Ready</strong><small>HTTP Header Analysis</small></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">SECURITY INTELLIGENCE / DASHBOARD</div>
+          <h1>HTTP Security Analyzer</h1>
+          <p class="muted">Analyze website response headers and discover security gaps.</p>
         </div>
-        <div id="result"></div>
-    </div>
-    <script src="script.js"></script>
+        <div class="topbar-tag"><span class="status-dot"></span> SYSTEM ONLINE</div>
+      </header>
+
+      <section class="panel scanner-panel" id="scanner">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">NEW SECURITY SCAN</div>
+            <h2>Scan a website</h2>
+          </div>
+          <span class="pill">LIVE ANALYSIS</span>
+        </div>
+
+        <form id="scanForm">
+          <label for="url">Target website URL</label>
+          <div class="scan-controls">
+            <div class="url-input-wrap">
+              <span class="url-icon">↗</span>
+              <input id="url" name="url" type="url"
+                placeholder="https://example.com" required
+                autocomplete="url">
+            </div>
+            <button type="submit" id="scanBtn">
+              <span id="scanBtnText">Run Security Scan →</span>
+            </button>
+          </div>
+          <p class="helper-text">Scan only websites you own or have permission to assess.</p>
+          <p id="scanMessage" class="scan-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="section-block" id="overview">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">SCAN SUMMARY</div>
+            <h2>Security overview</h2>
+          </div>
+          <span id="scanStatus" class="pill">AWAITING SCAN</span>
+        </div>
+
+        <div class="overview-grid">
+          <article class="panel score-panel">
+            <div class="metric-title">SECURITY SCORE</div>
+            <div class="gauge-wrap">
+              <svg class="score-gauge" viewBox="0 0 140 140" role="img"
+                aria-label="Website security score gauge">
+                <circle class="gauge-track" cx="70" cy="70" r="54"></circle>
+                <circle id="gaugeProgress" class="gauge-progress"
+                  cx="70" cy="70" r="54"></circle>
+              </svg>
+              <div class="gauge-center">
+                <div><span id="gaugeScore">--</span><small>/100</small></div>
+                <span id="gaugeRating" class="gauge-rating">Not scanned</span>
+              </div>
+            </div>
+            <p id="scoreLabel" class="muted score-caption">Run a scan to calculate the score.</p>
+          </article>
+
+          <article class="panel metric-card">
+            <div class="metric-title">HEADERS CHECKED</div>
+            <div id="checkedValue" class="metric-value">0</div>
+            <p class="muted">Security checks performed</p>
+            <div class="metric-mark cyan-mark">≡</div>
+          </article>
+
+          <article class="panel metric-card">
+            <div class="metric-title">HEADERS PRESENT</div>
+            <div id="presentValue" class="metric-value">0</div>
+            <p class="muted">Headers detected by scanner</p>
+            <div class="metric-mark green-mark">✓</div>
+          </article>
+
+          <article class="panel metric-card">
+            <div class="metric-title">FINDINGS</div>
+            <div id="findingValue" class="metric-value">0</div>
+            <p class="muted">Missing or weak configurations</p>
+            <div class="metric-mark red-mark">!</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel target-panel">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">TARGET INFORMATION</div>
+            <h2>Scan details</h2>
+          </div>
+        </div>
+        <div class="target-grid">
+          <div><span class="muted">Website</span><strong id="targetInfo">Not scanned yet</strong></div>
+          <div><span class="muted">HTTP response</span><strong id="httpInfo">—</strong></div>
+          <div><span class="muted">Last scan</span><strong id="scanFooter">—</strong></div>
+        </div>
+      </section>
+
+      <section class="panel results-panel" id="findings">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">HEADER INSPECTION</div>
+            <h2>Security findings</h2>
+          </div>
+          <span class="pill">HEADER BY HEADER</span>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon">⌕</div>
+          <h3>Ready to analyze</h3>
+          <p>Enter a website URL above to view header status, security risks, and remediation guidance.</p>
+        </div>
+
+        <div id="tableWrap" class="table-wrap hidden">
+          <table>
+            <thead>
+              <tr>
+                <th>SECURITY HEADER</th>
+                <th>STATUS</th>
+                <th>RISK</th>
+                <th>OBSERVED VALUE</th>
+              </tr>
+            </thead>
+            <tbody id="headerTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel details-panel">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">REMEDIATION CENTER</div>
+            <h2>Vulnerability details & fixes</h2>
+          </div>
+        </div>
+        <div id="detailsEmpty" class="empty-state compact-empty">
+          Detailed explanations will appear here after a scan.
+        </div>
+        <div id="detailsList" class="details-list hidden"></div>
+      </section>
+
+      <footer class="page-footer">
+        <span>SecureScan · Educational security assessment tool</span>
+        <span>Results are heuristic indicators, not a complete penetration test.</span>
+      </footer>
+    </main>
+  </div>
 </body>
 </html>

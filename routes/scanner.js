@@ -1,43 +1,90 @@
-const express  = require("express");
-const validateURL = require("../utils/validator");
-const analyzeHeaders = require("../services/headerAnalyzer");
+const express = require("express");
 const router = express.Router();
 
-router.post("/scan",async(req,res)=>{
-    const {url} = req.body;
+const { validateURL } = require("../utils/validator");
+const { analyzeHeaders } = require("../services/headerAnalyzer");
 
-    const validation = validateURL(url);
-    if(!validation.valid){
-        return res.status(400).json({
-            success:false,
-            message: validation.message
-        });
-    }
-    try{
-        const response = await fetch(url);
+router.post("/scan", async (req, res) => {
+  try {
+    const { url } = req.body;
 
-        const headers = Object.fromEntries(response.headers);
-        console.log("Response Headers:", headers);
+    if (!url || typeof url !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid website URL."
+      });
+    }
 
-        const analysis = analyzeHeaders(headers);
-        res.json({
-            success:true,
-            url:url,
-            statusCode: response.status,
-            score: analysis.score,
-            rating:analysis.rating,
-            headers:analysis.results
-            
-        });
+    const validation = await validateURL(url);
+
+    // Support validators that return either true or a result object.
+    if (
+      validation === false ||
+      (validation && typeof validation === "object" &&
+        validation.valid === false)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: validation.message || "This URL is not allowed."
+      });
     }
-    catch(error){
-        console.error(error);
-        res.status(500).json({
-            success:false,
-            message:"Unable to scan the website.",
-            error: error.message
-        });
+
+    const targetURL = new URL(url);
+
+    const response = await fetch(targetURL.toString(), {
+      method: "GET",
+      redirect: "manual",
+      signal: AbortSignal.timeout(15000),
+      headers: {
+        "User-Agent": "SecureScan/1.0",
+        "Accept": "text/html,application/xhtml+xml,*/*"
+      }
+    });
+
+    if (response.status >= 300 && response.status < 400) {
+      return res.status(422).json({
+        success: false,
+        message: "The website returned a redirect. Try scanning its final destination URL."
+      });
     }
+
+    const headers = Object.fromEntries(response.headers.entries());
+
+    const analysis = analyzeHeaders(
+      headers,
+      targetURL.protocol === "https:"
+    );
+
+    return res.json({
+      success: true,
+      url: targetURL.toString(),
+      statusCode: response.status,
+      score: analysis.score,
+      rating: analysis.rating,
+      checked: analysis.checked,
+      present: analysis.present,
+      findings: analysis.findings,
+      headers: analysis.results
+    });
+  } catch (error) {
+    // Print the underlying error for debugging.
+    console.error("[SecureScan] Scan failed:", error);
+    console.error("Error message:", error.message);
+    console.error("Error cause:", error.cause);
+    console.error("Error code:", error.cause?.code);
+
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      return res.status(504).json({
+        success: false,
+        message: "The website took too long to respond. Try again."
+      });
+    }
+
+    return res.status(502).json({
+      success: false,
+      message: "Unable to fetch the website. Check the server terminal for details."
+    });
+  }
 });
 
 module.exports = router;
