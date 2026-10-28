@@ -118,12 +118,11 @@ function renderHeaderTable(headers) {
 
     row.appendChild(nameCell);
 
-<<<<<<< HEAD
+
     const status = normalizeStatus(item.status);
     const statusText = status === "present"
       ? "Present"
       : status === "weak" ? "Weak" : "Missing";
-=======
     try{
         const response = await fetch("/api/scan",{
             method: "POST",
@@ -184,7 +183,7 @@ function renderHeaderTable(headers) {
                 ${headerHTML}     
             </div>
         `;
->>>>>>> c5ca5f6165ad3fdbac6020fa5c52eda6f091d685
+
 
     addCell(row, makeBadge(statusText, `status-badge status-${status}`));
 
